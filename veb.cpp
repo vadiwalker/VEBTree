@@ -174,6 +174,7 @@ private:
 	unsigned long long min;
 	unsigned long long max;
 	unsigned int mask;
+	static const bool peril = true;
 
 public:
 
@@ -186,8 +187,6 @@ public:
 	}
 
 	void remove(unsigned long long x) {
-		if (empty()) 
-			return;
 		mask &= ~(1 << x);
 	}
 
@@ -196,29 +195,66 @@ public:
 	}
 
 	unsigned long long next(unsigned long long x) const {
-		x++;
-		while (!used[x] && x < 2) 
-			x++;
-		return x == 2 ? NO : x;
+		if (peril) {
+			unsigned int remainder = mask & (~(1 << (x + 1) - 1));
+			if (remainder == 0) 
+				return NO;
+			return __builtin_ffs(remainder) - 1;		
+		} else {
+			// x++;
+			// while (x < 2) {
+			// 	if (mask & (1 << x)) {
+			// 		return x;
+			// 	}
+			// 	x++;
+			// }
+			// return NO;
+		}
 	}
 
 	unsigned long long prev(unsigned long long x) const {
-		if (x == 0) {
-			return NO;
+		if (peril) {
+			unsigned int remainder = mask & ((1 << x) - 1);
+			if (remainder == 0)
+				return NO;
+			return 1 - (__builtin_clz(remainder) - 30);
+		} else {
+			// if (!x) 
+			// 	return NO;
+			// x--;
+			// while (x > 0) {
+			// 	if (mask & (1 << x)) 
+			// 		break;
+			// 	x--;
+			// }
+			// if (mask & (1 << x)) {
+			// 	return x;
+			// } else {
+			// 	return NO;
+			// }
 		}
-		x--;
-		while (!used[x] && x > 0) {
-			x--;
-		}
-		return used[x] ? x : NO;
 	}
 
 	unsigned long long getMin() const {
-		return min;
+		if (empty()) 
+			return NO;
+		if (peril) {
+			return __builtin_ffs(mask) - 1;	
+		} else {
+			// if (mask & 1) return 0;
+			// else return next(0);
+		}
+		
 	}
 
 	unsigned long long getMax() const {
-		return max;
+		if (empty()) 
+			return NO;
+		if (peril) {
+			return 1 /*2^S - 1*/ - (__builtin_clz(mask) - 30);
+		} else {
+			// return prev(2);
+		}
 	}
 };
 
@@ -404,8 +440,6 @@ void stress() {
 		t.add(100);
 		rev_enumerate(t);
 	}
- 
-	
 }
 
 int main() {
