@@ -10,12 +10,12 @@
 #define DB(x) std::cerr << #x << " = " << x << "\n";
 #define SH (S / 2) // S HALF  
 
-template<unsigned int S>
+template <unsigned int S>
 class VEBTree : AbstractVEBTree<S> {
 private:
 	std::map < unsigned long long, VEBTree<SH> > buckets;
 
-	VEBTree<SH> summary;
+	VEBTree<S - SH> summary;
 	unsigned long long min;
 	unsigned long long max;
 
@@ -24,7 +24,7 @@ private:
 	}
 
 	inline unsigned long long high(unsigned long long x) const {
-		return low(x >> SH);
+		return x >> SH;
 	}
 	
 public:
@@ -76,7 +76,7 @@ public:
 		if (x == min) {
 			x = buckets[summary.getMin()].getMin() | (summary.getMin() << SH);
 			min = x;
-		}
+		}	
 
 		unsigned long long hi = high(x);
 		unsigned long long lo = low(x);
@@ -167,6 +167,7 @@ public:
 	}
 };
 
+
 template<>
 class VEBTree<1> : AbstractVEBTree<1> {
 
@@ -201,14 +202,7 @@ public:
 				return NO;
 			return __builtin_ffs(remainder) - 1;		
 		} else {
-			// x++;
-			// while (x < 2) {
-			// 	if (mask & (1 << x)) {
-			// 		return x;
-			// 	}
-			// 	x++;
-			// }
-			// return NO;
+			// x++; 
 		}
 	}
 
@@ -236,7 +230,7 @@ public:
 	}
 
 	unsigned long long getMin() const {
-		if (empty()) 
+		if (empty())
 			return NO;
 		if (peril) {
 			return __builtin_ffs(mask) - 1;	
@@ -248,7 +242,7 @@ public:
 	}
 
 	unsigned long long getMax() const {
-		if (empty()) 
+		if (empty()) 	 
 			return NO;
 		if (peril) {
 			return 1 /*2^S - 1*/ - (__builtin_clz(mask) - 30);
@@ -307,7 +301,7 @@ void rev_enumerate(std::set <int> & s) {
 		std::cout << *rit++ << " ";
 	}
 }
-
+ 	
 void enumerate(std::set <int> & s) {
 	std::cout << "\n";
 	for (int x : s) {
@@ -316,7 +310,7 @@ void enumerate(std::set <int> & s) {
 }
 
 void test() {
-	const int S = 32;
+	const int S = 36;
 	
 	VEBTree <S> t;
 	std::set <int> s;
@@ -343,6 +337,7 @@ void test() {
 	// rev_enumerate(t);
 
 	assert(size(t) == s.size());
+	assert(t.empty() == s.empty());
 
 	random_shuffle(elements.begin(), elements.end());
 
@@ -387,8 +382,6 @@ void test() {
 		}
 	}
 }
-
-
 
 void stress() {
 	const int S = 16;
@@ -444,5 +437,8 @@ void stress() {
 
 int main() {
 	test();
+#ifdef KOBRA
+	std::cout << "Time elapsed: " << (double) clock() / CLOCKS_PER_SEC << "\n";
+#endif
 	return 0;
 }
